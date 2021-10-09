@@ -1,0 +1,34 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Ikuma-Hiroyuki
+
+//@version=5
+indicator('RSI %R')
+
+// RSI
+int rsiLen = input.int(defval=21, title='RSIの期間', group='RSI')
+int rsiSignal = input.int(defval=50, title='RSIのシグナル', group='RSI',
+                          tooltip='RSIは買われすぎ売られすぎ指標。\n一般的に70以上で買われすぎ、30以下で売られすぎ。')
+
+_rsi = ta.rsi(close, rsiLen)
+plot(_rsi, title='RSI', color=_rsi >= rsiSignal ? color.blue : color.new(color.gray, 60), style=plot.style_line)
+hline(rsiSignal, color=color.new(color.blue, 50), title='RSI siglnal line')
+
+
+// %R
+int prLength = input.int(title='%Rの期間', defval=4, group='%R')
+int prSignal = input.int(title='売られすぎ水準', defval=20, group='%R',
+                         tooltip='%Rは高値からの相対位置を把握。\n100が高値水準、0が下値水準。\n(一般的な%Rと逆転させています)')
+
+_pr(prLength) =>
+    max = ta.highest(prLength)
+    min = ta.lowest(prLength)
+    100 - 100 * (max - close) / (max - min)
+
+percentR = _pr(prLength)
+plot(percentR, title='%R', color=percentR <= prSignal ? color.red : color.new(color.gray, 30), style=plot.style_line)
+hline(prSignal, color=color.new(color.red, 50), title='%R signal line')
+
+
+// Signal
+if _rsi >= rsiSignal and percentR <= prSignal
+    label.new(bar_index, 50, style=label.style_cross, size=size.auto, color=color.green)
